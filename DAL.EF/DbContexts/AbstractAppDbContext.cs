@@ -1,4 +1,6 @@
-﻿using Domain.Entities.Identity;
+﻿using DAL.EF.Converters;
+using Domain.Entities;
+using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,6 +11,12 @@ namespace DAL.EF.DbContexts;
 public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
     UserLogin, RoleClaim, UserToken>
 {
+    public DbSet<Company> Companies { get; set; } = default!;
+    public DbSet<Leg> Legs { get; set; } = default!;
+    public DbSet<LegProvider> LegProviders { get; set; } = default!;
+    public DbSet<Location> Locations { get; set; } = default!;
+    public DbSet<PriceList> PriceLists { get; set; } = default!;
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
@@ -33,8 +41,26 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         builder.ReconfigureIdentity();
+
+        builder.Entity<Leg>()
+            .HasOne<Location>(e => e.StartLocation)
+            .WithMany(e => e.OutgoingLegs)
+            .HasForeignKey(e => e.StartLocationId);
+        builder.Entity<Leg>()
+            .HasOne<Location>(e => e.EndLocation)
+            .WithMany(e => e.IncomingLegs)
+            .HasForeignKey(e => e.EndLocationId);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder
+            .Properties<DateTime>()
+            .HaveConversion<DateTimeUtcConverter>();
     }
 }
 

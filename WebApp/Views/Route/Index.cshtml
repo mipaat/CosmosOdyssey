@@ -1,0 +1,76 @@
+﻿@using BLL.DTO.Entities
+@model WebApp.ViewModels.Route.SearchModel
+
+<form method="get" asp-action="Index">
+    <input asp-for="From" type="search" placeholder="From..."/>
+    <input asp-for="To" type="search" placeholder="To..."/>
+    <input asp-for="Company" type="search" placeholder="Company..."/>
+    <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Name)" value="@Model.SortBy.Name"/>
+    <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Descending)" value="@Model.SortBy.Descending"/>
+    <input type="submit" class="btn btn-primary"/>
+</form>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            From
+        </th>
+        <th>
+            To
+        </th>
+        <th>
+            Departure
+        </th>
+        <th>
+            Arrival
+        </th>
+        <th>
+            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.TravelTime), Model.SortBy))">Travel time</a>
+        </th>
+        <th>
+            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.Price), Model.SortBy))">Price</a>
+        </th>
+        <th>
+            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.Distance), Model.SortBy))">Distance</a>
+        </th>
+        <th>
+            Company
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    @if (Model.Results != null)
+    {
+        @foreach (var summary in Model.Results)
+        {
+            <tr>
+                <td>
+                    @summary.StartLocation
+                </td>
+                <td>
+                    @summary.EndLocation
+                </td>
+                <td>
+                    @summary.Departure
+                </td>
+                <td>
+                    @summary.Arrival
+                </td>
+                <td>
+                    @string.Format("{0:dd}d {0:hh}h {0:mm}min", summary.Arrival - summary.Departure)
+                </td>
+                <td>
+                    @summary.Price
+                </td>
+                <td>
+                    @summary.Distance km
+                </td>
+                <td>
+                    @summary.CompanyName
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>

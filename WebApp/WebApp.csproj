@@ -31,6 +31,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BLL.CosmosOdyssey\BLL.CosmosOdyssey.csproj" />
       <ProjectReference Include="..\BLL\BLL.csproj" />
       <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
     </ItemGroup>

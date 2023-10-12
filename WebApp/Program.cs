@@ -1,3 +1,5 @@
+using BLL.CosmosOdyssey;
+using BLL;
 using BLL.Identity;
 using DAL.EF;
 using Serilog;
@@ -21,6 +23,9 @@ builder.Services.AddDbPersistenceEf(builder.Configuration);
 builder.Services.AddControllersWithViews();
 builder.Services.AddMvc();
 builder.AddCustomIdentity();
+
+builder.Services.AddBll();
+builder.Services.AddCosmosOdyssey();
 
 var app = builder.Build();
 
