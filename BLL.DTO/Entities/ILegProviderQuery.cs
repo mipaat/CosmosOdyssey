@@ -1,6 +1,6 @@
 ﻿namespace BLL.DTO.Entities;
 
-public interface ILegProviderQuery
+public interface ILegProviderQuery : IPaginationQuery
 {
     public string? From { get; set; }
     public string? To { get; set; }

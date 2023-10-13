@@ -55,7 +55,7 @@ app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Route}/{action=Index}");
 app.MapRazorPages();
 
 app.Run();

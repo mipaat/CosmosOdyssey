@@ -1,0 +1,21 @@
+﻿@using BLL.DTO.Entities
+@model WebApp.ViewModels.Shared.SortHeaderModel
+
+<a asp-all-route-data="@Model.QueryStringFunc(new SortOptions(Model.Name, Model.CurrentSort))">
+    @(Model.DisplayName ?? Model.Name)@SortDirectionDisplay
+</a>
+
+@functions
+{
+    string SortDirectionDisplay
+    {
+        get
+        {
+            if (Model.CurrentSort.Name != Model.Name || Model.CurrentSort.Descending == null)
+            {
+                return "";
+            }
+            return Model.CurrentSort.Descending.Value ? " ↓" : " ↑";
+        }
+    }
+}

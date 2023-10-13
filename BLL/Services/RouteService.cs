@@ -50,6 +50,8 @@ public class RouteService
                 nameof(LegProviderSummary.Price) => (e => e.Price, false),
                 nameof(LegProviderSummary.Distance) => (e => e.Leg!.DistanceKm, false),
                 nameof(LegProviderSummary.TravelTime) => (e => e.Arrival - e.Departure, false),
+                nameof(LegProviderSummary.Departure) => (e => e.Departure, false),
+                nameof(LegProviderSummary.Arrival) => (e => e.Arrival, false),
                 _ => (e => e.Arrival - e.Departure, false),
             };
 
@@ -61,6 +63,11 @@ public class RouteService
         query = sortOptions.descending
             ? query.OrderByDescending(sortOptions.orderExpression)
             : query.OrderBy(sortOptions.orderExpression);
+
+        queryParams.ConformValues();
+        var skipAmount = queryParams.GetSkipAmount();
+
+        query = query.Skip(skipAmount).Take(queryParams.Limit);
 
         return query.ProjectToSummary().ToListAsync();
     }

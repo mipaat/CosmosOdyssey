@@ -1,4 +1,7 @@
 ﻿@using BLL.DTO.Entities
+@using WebApp.Controllers
+@using WebApp.Utils
+@using WebApp.ViewModels.Shared
 @model WebApp.ViewModels.Route.SearchModel
 
 <form method="get" asp-action="Index">
@@ -7,8 +10,11 @@
     <input asp-for="Company" type="search" placeholder="Company..."/>
     <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Name)" value="@Model.SortBy.Name"/>
     <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Descending)" value="@Model.SortBy.Descending"/>
+    @WebUtils.GetPaginationFormSection(Model)
     <input type="submit" class="btn btn-primary"/>
 </form>
+
+<partial name="_PaginationUiPartial" model="@PaginationViewModel"/>
 
 <table class="table">
     <thead>
@@ -20,19 +26,19 @@
             To
         </th>
         <th>
-            Departure
+            <partial name="_SortHeader" model="new SortHeaderModel(nameof(LegProviderSummary.Departure), Model.ToQueryStringValues, Model.SortBy)"/>
         </th>
         <th>
-            Arrival
+            <partial name="_SortHeader" model="new SortHeaderModel(nameof(LegProviderSummary.Arrival), Model.ToQueryStringValues, Model.SortBy)"/>
         </th>
         <th>
-            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.TravelTime), Model.SortBy))">Travel time</a>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(LegProviderSummary.TravelTime), Model.ToQueryStringValues, Model.SortBy, "Travel time"))"/>
         </th>
         <th>
-            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.Price), Model.SortBy))">Price</a>
+            <partial name="_SortHeader" model="new SortHeaderModel(nameof(LegProviderSummary.Price), Model.ToQueryStringValues, Model.SortBy)"/>
         </th>
         <th>
-            <a asp-action="Index" asp-all-route-data="@Model.ToQueryStringValues(new SortOptions(nameof(LegProviderSummary.Distance), Model.SortBy))">Distance</a>
+            <partial name="_SortHeader" model="new SortHeaderModel(nameof(LegProviderSummary.Distance), Model.ToQueryStringValues, Model.SortBy)"/>
         </th>
         <th>
             Company
@@ -52,10 +58,10 @@
                     @summary.EndLocation
                 </td>
                 <td>
-                    @summary.Departure
+                    @summary.Departure.ToSpan(Context)
                 </td>
                 <td>
-                    @summary.Arrival
+                    @summary.Arrival.ToSpan(Context)
                 </td>
                 <td>
                     @string.Format("{0:dd}d {0:hh}h {0:mm}min", summary.Arrival - summary.Departure)
@@ -74,3 +80,17 @@
     }
     </tbody>
 </table>
+
+@functions
+{
+    PaginationUiPartialViewModel PaginationViewModel => new()
+    {
+        ControllerName = nameof(RouteController),
+        ActionName = nameof(RouteController.Index),
+        RouteValues = Context.GetRouteValues(),
+        Page = Model.Page,
+        Limit = Model.Limit,
+        Total = null,
+        AmountOnPage = Model.Results?.Count ?? 0,
+    };
+}

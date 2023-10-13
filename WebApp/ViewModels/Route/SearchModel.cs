@@ -23,5 +23,11 @@ public class SearchModel : ILegProviderQuery
         {nameof(Company), Company ?? string.Empty},
         {$"{nameof(SortBy)}.{nameof(SortBy.Name)}", sortOptions.Name ?? string.Empty},
         {$"{nameof(SortBy)}.{nameof(SortBy.Descending)}", sortOptions.Descending?.ToString() ?? string.Empty},
+        {nameof(Page), Page.ToString()},
+        {nameof(Limit), Limit.ToString()},
     };
+
+    public int Page { get; set; }
+    public int Limit { get; set; } = 50;
+    public int? Total { get; set; }
 }
