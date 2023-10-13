@@ -43,6 +43,7 @@
         <th>
             Company
         </th>
+        <th></th>
     </tr>
     </thead>
     <tbody>
@@ -74,6 +75,15 @@
                 </td>
                 <td>
                     @summary.CompanyName
+                </td>
+                <td>
+                    @if (summary.ValidUntil < DateTime.UtcNow)
+                    {
+                        <span class="text-danger">Offer expired!</span>
+                    } else if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a asp-controller="Reservations" asp-action="Create" asp-route-legProviderId="@summary.Id" class="btn btn-primary">Reserve</a>
+                    }
                 </td>
             </tr>
         }

@@ -17,5 +17,6 @@ public static class LegProviderSummaryMapper
             EndLocation = legProvider.Leg.EndLocation!.Name,
             Distance = legProvider.Leg.DistanceKm,
             TravelTime = legProvider.Arrival - legProvider.Departure,
+            ValidUntil = legProvider.Leg.PriceList!.ValidUntil,
         });
 }

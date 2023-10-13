@@ -8,5 +8,6 @@ public static class ServiceCollectionExtensions
     public static void AddBll(this IServiceCollection services)
     {
         services.AddScoped<RouteService>();
+        services.AddScoped<ReservationService>();
     }
 }

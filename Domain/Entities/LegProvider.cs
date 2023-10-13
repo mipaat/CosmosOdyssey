@@ -13,4 +13,6 @@ public class LegProvider : AbstractExternalDatabaseEntity
 
     public Company? Company { get; set; }
     public Guid CompanyId { get; set; }
+
+    public ICollection<ReservationLegProvider>? ReservationLegProviders { get; set; }
 }

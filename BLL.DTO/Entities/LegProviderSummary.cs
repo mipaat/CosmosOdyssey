@@ -12,4 +12,5 @@ public class LegProviderSummary : AbstractIdDatabaseEntity
     public string StartLocation { get; set; } = default!;
     public string EndLocation { get; set; } = default!;
     public long Distance { get; set; }
+    public DateTime ValidUntil { get; set; }
 }

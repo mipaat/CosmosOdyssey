@@ -17,6 +17,9 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
     public DbSet<Location> Locations { get; set; } = default!;
     public DbSet<PriceList> PriceLists { get; set; } = default!;
 
+    public DbSet<Reservation> Reservations { get; set; } = default!;
+    public DbSet<ReservationLegProvider> ReservationLegProviders { get; set; } = default!;
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 

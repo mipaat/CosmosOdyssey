@@ -2,6 +2,7 @@
 using BLL.DTO.Entities;
 using BLL.DTO.Mappers;
 using DAL.EF.DbContexts;
+using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Utils;
@@ -17,11 +18,16 @@ public class RouteService
         _ctx = ctx;
     }
 
+    public Task<List<LegProviderSummary>> GetLegProvidersByIds(params Guid[] ids)
+    {
+        return _ctx.LegProviders.Where(e => ids.Contains(e.Id)).ProjectToSummary().ToListAsync();
+    }
+
     public Task<List<LegProviderSummary>> Search(ILegProviderQuery queryParams)
     {
         IQueryable<LegProvider> query = _ctx.LegProviders;
 
-        query = query.Where(e => e.Leg!.PriceList!.ValidUntil > DateTime.UtcNow);
+        query = query.WhereValid();
 
         if (!string.IsNullOrWhiteSpace(queryParams.From))
         {
