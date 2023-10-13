@@ -10,7 +10,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<RouteService>();
         services.AddScoped<ReservationService>();
-        services.AddScoped<PriceListService>();
         services.AddHostedService<PriceListDeleterBackgroundService>();
     }
 }

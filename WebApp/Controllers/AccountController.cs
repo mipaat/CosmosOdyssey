@@ -103,10 +103,7 @@ public class AccountController : Controller
                 throw new NotImplementedException("2FA is not implemented yet");
             }
         }
-        else
-        {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt");
-        }
+        ModelState.AddModelError(string.Empty, "Invalid login attempt");
 
         return View(model);
     }

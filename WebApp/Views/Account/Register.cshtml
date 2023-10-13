@@ -11,7 +11,7 @@
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <h2 class="text-center">Create a new local account</h2>
             <hr/>
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            @Html.ValidationSummary(true, "", new { @class = "text-danger", role = "alert" })
             <div class="form-floating mb-3">
                 <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="username"/>
                 <label asp-for="Input.UserName"></label>

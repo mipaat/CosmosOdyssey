@@ -43,7 +43,8 @@ else
     app.UseHsts();
 }
 
-app.Services.GetRequiredService<AbstractAppDbContext>().Database.Migrate();
+var scope = app.Services.CreateScope();
+scope.ServiceProvider.GetRequiredService<AbstractAppDbContext>().Database.Migrate();
 app.SeedIdentity();
 
 app.UseHttpsRedirection();

@@ -1,5 +1,6 @@
 ﻿using BLL.Base;
-using BLL.Services;
+using DAL.EF.DbContexts;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +16,19 @@ public class PriceListDeleterBackgroundService : BaseLockedTimedBackgroundServic
     protected override async Task DoLockedWork(object? state)
     {
         await using var scope = Services.CreateAsyncScope();
-        await scope.ServiceProvider.GetRequiredService<PriceListService>().ExecuteDeleteExpiredPriceLists();
+        var ctx = scope.ServiceProvider.GetRequiredService<AbstractAppDbContext>();
+        await ctx.PriceLists
+            .Where(e => e.ValidUntil < DateTime.UtcNow)
+            .OrderByDescending(e => e.ValidUntil)
+            .Skip(15)
+            .ExecuteDeleteAsync();
+        await ctx.Locations
+            .Where(location => !ctx.Legs
+                .Any(leg => leg.StartLocationId == location.Id || leg.EndLocationId == location.Id))
+            .ExecuteDeleteAsync();
+        await ctx.Companies
+            .Where(c => !ctx.LegProviders
+                .Any(lp => lp.CompanyId == c.Id))
+            .ExecuteDeleteAsync();
     }
 }
