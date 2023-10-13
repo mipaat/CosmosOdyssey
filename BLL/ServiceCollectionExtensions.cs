@@ -1,4 +1,5 @@
-﻿using BLL.Services;
+﻿using BLL.BackgroundServices;
+using BLL.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BLL;
@@ -9,5 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<RouteService>();
         services.AddScoped<ReservationService>();
+        services.AddScoped<PriceListService>();
+        services.AddHostedService<PriceListDeleterBackgroundService>();
     }
 }
