@@ -23,10 +23,12 @@ services:
           - db
   webapp:
     container_name: webapp
-    build: .
+    build:
+      context: .
+      dockerfile: WebApp/Dockerfile
     restart: unless-stopped
     environment:
-      - CONNECTIONSTRINGS__DEFAULTCONNECTION=User ID=postgres;Password=postgres;Host=db;Port=5432;Database=video_archiver;
+      - CONNECTIONSTRINGS__DEFAULTCONNECTION=User ID=postgres;Password=postgres;Host=db;Port=5432;Database=cosmos_odyssey;
     ports:
       - "8080:80"
     networks:

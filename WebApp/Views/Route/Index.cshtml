@@ -15,7 +15,7 @@
     <input asp-for="Company" type="search" placeholder="Company..."/>
     @WebUtils.GetSortingFormSection(Model)
     @WebUtils.GetPaginationFormSection(Model)
-    <input type="submit" class="btn btn-primary"/>
+    <input type="submit" class="btn btn-primary" value="Apply filter"/>
 </form>
 
 <partial name="_PaginationUiPartial" model="@PaginationViewModel"/>
