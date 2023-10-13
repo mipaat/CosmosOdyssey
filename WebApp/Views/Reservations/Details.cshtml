@@ -1,7 +1,26 @@
-﻿@model WebApp.ViewModels.Reservations.DetailsModel
+﻿@using Utils
+@using WebApp.Utils
+@model WebApp.ViewModels.Reservations.DetailsModel
 
 @if (Model.ShowSuccessMessage)
 {
     <div class="text-success">Reservation created successfully!</div>
 }
-<div>TODO: Details for reservation @Model.Id</div>
+
+<h2>Reservation details</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div>
+            First name: @Model.Reservation.FirstName
+        </div>
+        <div>
+            Last name: @Model.Reservation.LastName
+        </div>
+    </div>
+
+    <partial name="_LegProviderTable" model="Model.Reservation.LegProviders"/>
+
+    <div>Created at: @Model.Reservation.CreatedAt.ToSpan(Context)</div>
+    <div>Total travel time: @FormattingUtils.FormatTimeSpan(Model.Reservation.TotalTravelTime)</div>
+    <div>Total price: @Model.Reservation.TotalPrice</div>
+</div>

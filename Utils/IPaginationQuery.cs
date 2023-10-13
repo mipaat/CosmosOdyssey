@@ -1,4 +1,4 @@
-﻿namespace BLL.DTO.Entities;
+﻿namespace Utils;
 
 public interface IPaginationQuery
 {

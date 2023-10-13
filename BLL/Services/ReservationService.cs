@@ -3,6 +3,7 @@ using BLL.DTO.Entities;
 using BLL.DTO.Mappers;
 using BLL.Identity.Services;
 using DAL.EF.DbContexts;
+using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,47 @@ public class ReservationService
     public ReservationService(AbstractAppDbContext ctx)
     {
         _ctx = ctx;
+    }
+
+    public async Task<AccessResult<ReservationSummary>> GetByIdForUser(Guid reservationId, Guid userId)
+    {
+        var result = await _ctx.Reservations
+            .Where(e => e.Id == reservationId)
+            .ProjectToSummary()
+            .FirstOrDefaultAsync();
+        if (result == null)
+        {
+            return EAccessResultType.NotFound;
+        }
+
+        if (result.UserId != userId)
+        {
+            return EAccessResultType.NotAllowed;
+        }
+
+        return result;
+    }
+
+    public Task<List<ReservationSummary>> GetAllForUser(Guid userId, IReservationQuery search)
+    {
+        IQueryable<Reservation> query = _ctx.Reservations;
+        query = query.Where(e => e.UserId == userId);
+
+        SortBehaviour<Reservation> sortBehaviour = search.SortBy.Name switch
+        {
+            nameof(ReservationSummary.FirstName) => (e => e.FirstName, false),
+            nameof(ReservationSummary.LastName) => (e => e.LastName, false),
+            nameof(ReservationSummary.CreatedAt) => (e => e.CreatedAt, false),
+            nameof(ReservationSummary.TotalPrice) => (e => e.TotalPrice, false),
+            nameof(ReservationSummary.TotalTravelTime) => (e => e.TotalTravelTime, false),
+            _ => (e => e.CreatedAt, false),
+        };
+
+        query = query.OrderBy(search.SortBy, sortBehaviour);
+        
+        query = query.Paginate(search);
+        
+        return query.ProjectToSummary().ToListAsync();
     }
 
     public async Task<ReservationResult> CreateReservation(Guid legProviderId, string firstName, string lastName,

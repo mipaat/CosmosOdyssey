@@ -1,4 +1,5 @@
 ﻿@using BLL.DTO.Entities
+@using Utils
 @using WebApp.Controllers
 @using WebApp.Utils
 @using WebApp.ViewModels.Shared
@@ -8,8 +9,7 @@
     <input asp-for="From" type="search" placeholder="From..."/>
     <input asp-for="To" type="search" placeholder="To..."/>
     <input asp-for="Company" type="search" placeholder="Company..."/>
-    <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Name)" value="@Model.SortBy.Name"/>
-    <input type="hidden" name="@nameof(Model.SortBy).@nameof(Model.SortBy.Descending)" value="@Model.SortBy.Descending"/>
+    @WebUtils.GetSortingFormSection(Model)
     @WebUtils.GetPaginationFormSection(Model)
     <input type="submit" class="btn btn-primary"/>
 </form>
@@ -65,7 +65,7 @@
                     @summary.Arrival.ToSpan(Context)
                 </td>
                 <td>
-                    @string.Format("{0:dd}d {0:hh}h {0:mm}min", summary.Arrival - summary.Departure)
+                    @FormattingUtils.FormatTimeSpan(summary.Arrival - summary.Departure)
                 </td>
                 <td>
                     @summary.Price

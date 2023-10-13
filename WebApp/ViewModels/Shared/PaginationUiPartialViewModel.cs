@@ -1,4 +1,5 @@
 ﻿using BLL.DTO.Entities;
+using Utils;
 
 namespace WebApp.ViewModels.Shared;
 

@@ -1,0 +1,73 @@
+﻿@using Utils
+@using WebApp.Utils
+@model List<BLL.DTO.Entities.LegProviderSummary>
+
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            From
+        </th>
+        <th>
+            To
+        </th>
+        <th>
+            Departure
+        </th>
+        <th>
+            Arrival
+        </th>
+        <th>
+            Travel time
+        </th>
+        <th>
+            Price
+        </th>
+        <th>
+            Distance
+        </th>
+        <th>
+            Company
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var provider in Model)
+    {
+        <tr>
+            <td>
+                @provider.StartLocation
+            </td>
+            <td>
+                @provider.EndLocation
+            </td>
+            <td>
+                @provider.Departure.ToSpan(Context)
+            </td>
+            <td>
+                @provider.Arrival.ToSpan(Context)
+            </td>
+            <td>
+                @FormattingUtils.FormatTimeSpan(provider.Arrival - provider.Departure)
+            </td>
+            <td>
+                @provider.Price
+            </td>
+            <td>
+                @provider.Distance km
+            </td>
+            <td>
+                @provider.CompanyName
+            </td>
+            <td>
+                @if (provider.ValidUntil < DateTime.UtcNow)
+                {
+                    <span class="text-danger">Offer expired!</span>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

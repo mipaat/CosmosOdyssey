@@ -1,0 +1,62 @@
+﻿@using WebApp.ViewModels.Shared
+@using WebApp.Controllers
+@using WebApp.Utils
+@using Utils
+@using BLL.DTO.Entities
+@model WebApp.ViewModels.Reservations.IndexModel
+
+<h2>Your reservations</h2>
+
+<partial name="_PaginationUiPartial" model="@PaginationViewModel"/>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.FirstName), Model.ToQueryStringValues, Model.SortBy, "First name"))"/>
+        </th>
+        <th>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.LastName), Model.ToQueryStringValues, Model.SortBy, "Last name"))"/>
+        </th>
+        <th>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.CreatedAt), Model.ToQueryStringValues, Model.SortBy, "Created at"))"/>
+        </th>
+        <th>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.TotalPrice), Model.ToQueryStringValues, Model.SortBy, "Price"))"/>
+        </th>
+        <th>
+            <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.TotalTravelTime), Model.ToQueryStringValues, Model.SortBy, "Travel time"))"/>
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var reservation in Model.Reservations)
+    {
+        <tr>
+            <td>@reservation.FirstName</td>
+            <td>@reservation.LastName</td>
+            <td>@reservation.CreatedAt.ToSpan(Context)</td>
+            <td>@reservation.TotalPrice</td>
+            <td>@FormattingUtils.FormatTimeSpan(reservation.TotalTravelTime)</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@reservation.Id" class="btn btn-outline-primary">Details</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@functions
+{
+    PaginationUiPartialViewModel PaginationViewModel => new()
+    {
+        ControllerName = nameof(ReservationsController),
+        ActionName = nameof(ReservationsController.Index),
+        RouteValues = Context.GetRouteValues(),
+        Page = Model.Page,
+        Limit = Model.Limit,
+        Total = null,
+        AmountOnPage = Model.Reservations.Count,
+    };
+}

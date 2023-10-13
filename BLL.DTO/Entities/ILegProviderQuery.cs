@@ -1,10 +1,10 @@
-﻿namespace BLL.DTO.Entities;
+﻿using Utils;
 
-public interface ILegProviderQuery : IPaginationQuery
+namespace BLL.DTO.Entities;
+
+public interface ILegProviderQuery : IPaginationQuery, ISortingQuery
 {
     public string? From { get; set; }
     public string? To { get; set; }
     public string? Company { get; set; }
-
-    public SortOptions SortBy { get; set; }
 }

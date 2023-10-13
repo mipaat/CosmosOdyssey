@@ -1,6 +1,7 @@
-﻿@using WebApp.Utils
+﻿@using Utils
 @model WebApp.ViewModels.Reservations.CreateGetModel
 
+<h2>Reserve a trip</h2>
 <div>
     <form method="post" asp-action="Create">
         @Html.ValidationSummary(true, "", new { @class = "text-danger", role = "alert" })
@@ -16,76 +17,9 @@
             <span asp-validation-for="LastName" class="text-danger"></span>
         </div>
 
-        <table class="table">
-            <thead>
-            <tr>
-                <th>
-                    From
-                </th>
-                <th>
-                    To
-                </th>
-                <th>
-                    Departure
-                </th>
-                <th>
-                    Arrival
-                </th>
-                <th>
-                    Travel time
-                </th>
-                <th>
-                    Price
-                </th>
-                <th>
-                    Distance
-                </th>
-                <th>
-                    Company
-                </th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var provider in Model.LegProviders)
-            {
-                <tr>
-                    <td>
-                        @provider.StartLocation
-                    </td>
-                    <td>
-                        @provider.EndLocation
-                    </td>
-                    <td>
-                        @provider.Departure.ToSpan(Context)
-                    </td>
-                    <td>
-                        @provider.Arrival.ToSpan(Context)
-                    </td>
-                    <td>
-                        @string.Format("{0:dd}d {0:hh}h {0:mm}min", provider.Arrival - provider.Departure)
-                    </td>
-                    <td>
-                        @provider.Price
-                    </td>
-                    <td>
-                        @provider.Distance km
-                    </td>
-                    <td>
-                        @provider.CompanyName
-                    </td>
-                    <td>
-                        @if (provider.ValidUntil < DateTime.UtcNow)
-                        {
-                            <span class="text-danger">Offer expired!</span>
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+        <partial name="_LegProviderTable" model="Model.LegProviders"/>
 
-        <div>Total travel time: @string.Format("{0:dd}d {0:hh}h {0:mm}min", Model.TotalTravelTime)</div>
+        <div>Total travel time: @FormattingUtils.FormatTimeSpan(Model.TotalTravelTime)</div>
         <div>Total price: @Model.TotalPrice</div>
 
         <input type="submit" class="btn btn-primary" value="Create"/>

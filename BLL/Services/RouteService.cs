@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using BLL.DTO.Entities;
+﻿using BLL.DTO.Entities;
 using BLL.DTO.Mappers;
 using DAL.EF.DbContexts;
 using DAL.EF.Extensions;
@@ -50,7 +49,7 @@ public class RouteService
                 EF.Functions.ILike(e.Company!.Name, pattern));
         }
 
-        (Expression<Func<LegProvider, dynamic>> orderExpression, bool descending) sortOptions =
+        SortBehaviour<LegProvider> sortOptions =
             queryParams.SortBy.Name switch
             {
                 nameof(LegProviderSummary.Price) => (e => e.Price, false),
@@ -61,19 +60,9 @@ public class RouteService
                 _ => (e => e.Arrival - e.Departure, false),
             };
 
-        if (queryParams.SortBy.Descending != null)
-        {
-            sortOptions.descending = queryParams.SortBy.Descending.Value;
-        }
+        query = query.OrderBy(queryParams.SortBy, sortOptions);
 
-        query = sortOptions.descending
-            ? query.OrderByDescending(sortOptions.orderExpression)
-            : query.OrderBy(sortOptions.orderExpression);
-
-        queryParams.ConformValues();
-        var skipAmount = queryParams.GetSkipAmount();
-
-        query = query.Skip(skipAmount).Take(queryParams.Limit);
+        query = query.Paginate(queryParams);
 
         return query.ProjectToSummary().ToListAsync();
     }

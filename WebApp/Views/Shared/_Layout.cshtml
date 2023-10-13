@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using WebApp.Utils
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -19,9 +20,21 @@
             </button>
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
+                    <li class="nav-item @Html.ActiveClass("Route")">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Route" asp-action="Index">Routes</a>
                     </li>
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <li class="nav-item @Html.ActiveClass("Reservations")">
+                            <a class="nav-link text-dark" asp-controller="Reservations" asp-action="Index">Reservations</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <span class="nav-link text-dark">Log in to view your reservations</span>
+                        </li>
+                    }
                 </ul>
                 <partial name="_LoginPartial"/>
             </div>
