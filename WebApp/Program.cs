@@ -2,6 +2,8 @@ using BLL.CosmosOdyssey;
 using BLL;
 using BLL.Identity;
 using DAL.EF;
+using DAL.EF.DbContexts;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Settings.Configuration;
 
@@ -41,6 +43,7 @@ else
     app.UseHsts();
 }
 
+app.Services.GetRequiredService<AbstractAppDbContext>().Database.Migrate();
 app.SeedIdentity();
 
 app.UseHttpsRedirection();

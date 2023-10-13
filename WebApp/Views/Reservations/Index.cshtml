@@ -5,6 +5,10 @@
 @using BLL.DTO.Entities
 @model WebApp.ViewModels.Reservations.IndexModel
 
+@{
+    ViewData["Title"] = "Your reservations";
+}
+
 <h2>Your reservations</h2>
 
 <partial name="_PaginationUiPartial" model="@PaginationViewModel"/>

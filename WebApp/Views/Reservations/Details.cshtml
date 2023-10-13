@@ -2,6 +2,10 @@
 @using WebApp.Utils
 @model WebApp.ViewModels.Reservations.DetailsModel
 
+@{
+    ViewData["Title"] = "Reservation details";
+}
+
 @if (Model.ShowSuccessMessage)
 {
     <div class="text-success">Reservation created successfully!</div>

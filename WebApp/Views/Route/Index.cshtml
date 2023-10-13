@@ -5,6 +5,10 @@
 @using WebApp.ViewModels.Shared
 @model WebApp.ViewModels.Route.SearchModel
 
+@{
+    ViewData["Title"] = "Routes";
+}
+
 <form method="get" asp-action="Index">
     <input asp-for="From" type="search" placeholder="From..."/>
     <input asp-for="To" type="search" placeholder="To..."/>
