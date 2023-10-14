@@ -140,7 +140,13 @@ public class RouteService
 
         var directionState = backward ? state.Backward : state.Forward;
 
+        // NB! For some reason these IDs do not get passed as parameters, but get hard-coded into the SQL query.
+        // This isn't ideal, but probably won't allow SQL injection since the Guids are still Guids, not arbitrary strings?
+        // Maybe that is why EF Core thinks it's OK to not pass them as parameters?
+        // Still, this probably means the IDs show up in logs regardless of whether sensitive data logging is enabled?
+        // TODO: Figure out how to make EF Core use parameters here.
         query = query.Where(e => !directionState.SeenLegIds.Contains(e.Id));
+
         query = FilterByLocationNames(query, directionState.CurrentNodes, backward, firstIteration);
 
         directionState.CurrentNodes.Clear();
@@ -175,11 +181,11 @@ public class RouteService
         bool backward,
         bool shouldRoughMatch)
     {
-        shouldRoughMatch = false; // TODO: remove debug override
         if (shouldRoughMatch)
         {
             var names = currentSourceNodes.Values
-                .Select(e => PostgresUtils.GetContainsPattern(e.Name));
+                .Select(e => PostgresUtils.GetContainsPattern(e.Name))
+                .ToList(); // NB! ToList() is required here to allow EF Core to translate this query into SQL
             query = backward
                 ? query.Where(e => names
                     .Any(n => EF.Functions.ILike(
@@ -190,7 +196,9 @@ public class RouteService
         }
         else
         {
-            var names = currentSourceNodes.Values.Select(e => e.Name).ToList();
+            var names = currentSourceNodes.Values
+                .Select(e => e.Name)
+                .ToList(); // NB! ToList() is required here to allow EF Core to translate this query into SQL
             query = backward
                 ? query.Where(e => names.Contains(e.EndLocation!.Name))
                 : query.Where(e => names.Contains(e.StartLocation!.Name));
