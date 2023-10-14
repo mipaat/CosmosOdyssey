@@ -21,6 +21,21 @@ public static class PaginationExtensions
             : query.OrderBy(sortBehaviour.OrderExpression);
     }
 
+    public static IOrderedEnumerable<TEntity> OrderBy<TEntity>(
+        this IEnumerable<TEntity> query,
+        SortOptions sortOptions,
+        SortBehaviour<TEntity> sortBehaviour)
+    {
+        if (sortOptions.Descending != null)
+        {
+            sortBehaviour = sortBehaviour with { Descending = sortOptions.Descending.Value };
+        }
+
+        return sortBehaviour.Descending
+            ? query.OrderByDescending(sortBehaviour.OrderExpression.Compile())
+            : query.OrderBy(sortBehaviour.OrderExpression.Compile());
+    }
+
     public static IOrderedQueryable<TEntity> ThenBy<TEntity>(
         this IOrderedQueryable<TEntity> query,
         SortOptions sortOptions,
@@ -38,6 +53,16 @@ public static class PaginationExtensions
 
     public static IQueryable<TEntity> Paginate<TEntity>(
         this IQueryable<TEntity> query,
+        IPaginationQuery paginationParams)
+    {
+        paginationParams.ConformValues();
+        var skipAmount = paginationParams.GetSkipAmount();
+
+        return query.Skip(skipAmount).Take(paginationParams.Limit);
+    }
+
+    public static IEnumerable<TEntity> Paginate<TEntity>(
+        this IEnumerable<TEntity> query,
         IPaginationQuery paginationParams)
     {
         paginationParams.ConformValues();

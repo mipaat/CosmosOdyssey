@@ -9,6 +9,7 @@ public static class LegProviderSummaryMapper
         q.Select(legProvider => new LegProviderSummary
         {
             Id = legProvider.Id,
+            LegId = legProvider.LegId,
             Price = legProvider.Price,
             Departure = legProvider.Departure,
             Arrival = legProvider.Arrival,

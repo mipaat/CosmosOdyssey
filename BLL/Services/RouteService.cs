@@ -1,23 +1,23 @@
-﻿using System.Linq.Expressions;
-using System.Security.Principal;
-using BLL.DTO.Entities;
+﻿using BLL.DTO.Entities;
 using BLL.DTO.Mappers;
 using DAL.EF.DbContexts;
 using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Logging;
 using Utils;
 
 namespace BLL.Services;
 
-public class RouteService
+public partial class RouteService
 {
     private readonly AbstractAppDbContext _ctx;
+    private readonly ILogger<RouteService> _logger;
 
-    public RouteService(AbstractAppDbContext ctx)
+    public RouteService(AbstractAppDbContext ctx, ILogger<RouteService> logger)
     {
         _ctx = ctx;
+        _logger = logger;
     }
 
     public Task<List<LegProviderSummary>> GetLegProvidersByIds(params Guid[] ids)
@@ -52,7 +52,7 @@ public class RouteService
                 EF.Functions.ILike(e.Company!.Name, pattern));
         }
 
-        SortBehaviour<LegProvider> sortOptions =
+        SortBehaviour<LegProvider> sortBehaviour =
             search.SortBy.Name switch
             {
                 nameof(LegProviderSummary.Price) => (e => e.Price, false),
@@ -63,7 +63,7 @@ public class RouteService
                 _ => (e => e.Arrival - e.Departure, false),
             };
 
-        query = query.OrderBy(search.SortBy, sortOptions);
+        query = query.OrderBy(search.SortBy, sortBehaviour);
 
         query = query.Paginate(search);
 
@@ -84,7 +84,186 @@ public class RouteService
 
         var (state, legIds) = await FindConnectedLegs(search.From, search.To);
 
-        throw new NotImplementedException();
+        var summaryCombinations = await GetSummaryCombinations(legIds, state);
+
+        var summaries = GetCombinedSummaries(summaryCombinations, search);
+
+        SortBehaviour<LegProviderSummary> sortBehaviour = search.SortBy.Name switch
+        {
+            nameof(LegProviderSummary.Price) => (e => e.Price, false),
+            nameof(LegProviderSummary.Distance) => (e => e.Distance, false),
+            nameof(LegProviderSummary.TravelTime) => (e => e.Arrival - e.Departure, false),
+            nameof(LegProviderSummary.Departure) => (e => e.Departure, false),
+            nameof(LegProviderSummary.Arrival) => (e => e.Arrival, false),
+            _ => (e => e.Arrival - e.Departure, false),
+        };
+
+        search.Total = summaries.Count;
+
+        summaries = summaries
+            .OrderBy(search.SortBy, sortBehaviour)
+            .Paginate(search)
+            .ToList();
+
+        return summaries;
+    }
+
+    private static List<LegProviderSummary> GetCombinedSummaries(List<List<LegProviderSummary>> summaryCombinations,
+        ILegProviderQuery search)
+    {
+        var result = new List<LegProviderSummary>();
+        foreach (var summaryCombination in summaryCombinations)
+        {
+            var count = summaryCombination.Count;
+
+            if (count == 1)
+            {
+                var singleSummary = summaryCombination.First();
+                if (search.Company != null &&
+                    (singleSummary.CompanyName?.Contains(search.Company, StringComparison.OrdinalIgnoreCase) ?? false))
+                {
+                    continue;
+                }
+
+                result.Add(singleSummary);
+                continue;
+            }
+
+            LegProviderSummary? firstSummary = null;
+            LegProviderSummary? lastSummary = null;
+            if (count == 0)
+            {
+                throw new ApplicationException();
+            }
+
+            var totalDistance = 0L;
+            decimal totalPrice = 0;
+            var minValidUntil = DateTime.MaxValue;
+            var containedCompany = search.Company == null;
+            for (var i = 0; i < count; i++)
+            {
+                var legSummary = summaryCombination[i];
+                if (i == 0)
+                {
+                    firstSummary = legSummary;
+                }
+
+                if (i == count - 1)
+                {
+                    lastSummary = legSummary;
+                }
+
+                if (!containedCompany && search.Company != null &&
+                    (legSummary.CompanyName?.Contains(search.Company, StringComparison.OrdinalIgnoreCase) ?? false))
+                {
+                    containedCompany = true;
+                }
+
+                totalDistance += legSummary.Distance;
+                totalPrice += legSummary.Price;
+                if (legSummary.ValidUntil < minValidUntil)
+                {
+                    minValidUntil = legSummary.ValidUntil;
+                }
+            }
+
+            if (!containedCompany)
+            {
+                continue;
+            }
+
+            var summary = new LegProviderSummary
+            {
+                StartLocation = firstSummary!.StartLocation,
+                EndLocation = lastSummary!.EndLocation,
+                Departure = firstSummary.Departure,
+                Arrival = lastSummary.Arrival,
+                TravelTime = lastSummary.Arrival - firstSummary.Departure,
+                Distance = totalDistance,
+                Price = totalPrice,
+                ValidUntil = minValidUntil,
+                SubLegs = summaryCombination,
+            };
+            result.Add(summary);
+        }
+
+        return result;
+    }
+
+    private async Task<List<List<LegProviderSummary>>> GetSummaryCombinations(
+        ICollection<Guid> legIds,
+        RouteSearchState state)
+    {
+        var summaryCombinations = new List<List<LegProviderSummary>>();
+
+        var summaries = await _ctx.LegProviders
+            .WhereValid()
+            .Where(e => legIds.Contains(e.LegId))
+            .ProjectToSummary()
+            .ToListAsync();
+
+        foreach (var paths in state.StartingNodes)
+        {
+            if (paths.Value == null)
+            {
+                _logger.LogWarning("The paths value for location node {LocationNodeName} was null", paths.Key.Name);
+                continue;
+            }
+
+            foreach (var path in paths.Value)
+            {
+                summaryCombinations.AddRange(GetSummariesForPath(path, summaries));
+            }
+        }
+
+        return summaryCombinations;
+    }
+
+    private List<List<LegProviderSummary>> GetSummariesForPath(Path path, List<LegProviderSummary> summaries)
+    {
+        var legProviders = summaries.Where(e => e.LegId == path.Edge.Leg.Id);
+        var result = new List<List<LegProviderSummary>>();
+        foreach (var legProvider in legProviders)
+        {
+            if (path.Next == null)
+            {
+                // Recursion base case
+                result.Add(new List<LegProviderSummary>
+                {
+                    legProvider,
+                });
+            }
+            else
+            {
+                var subsequentProviders = GetSummariesForPath(path.Next, summaries);
+                foreach (var nextCombination in subsequentProviders)
+                {
+                    var nextSummary = nextCombination.First();
+                    if (nextSummary.StartLocation != legProvider.EndLocation)
+                    {
+                        _logger.LogWarning(
+                            "Next leg start '{NextStartLocation}' != previous leg end '{PreviousEndLocation}'" +
+                            " when constructing summaries for path from '{From}' to '{To}'",
+                            nextSummary.StartLocation, legProvider.EndLocation, path.From.Name, path.To.Name);
+                        continue;
+                    }
+
+                    if (nextSummary.Departure < legProvider.Arrival)
+                    {
+                        continue;
+                    }
+
+                    var newCombination = new List<LegProviderSummary>
+                    {
+                        legProvider,
+                    };
+                    newCombination.AddRange(nextCombination);
+                    result.Add(newCombination);
+                }
+            }
+        }
+
+        return result;
     }
 
     private async Task<(RouteSearchState state, List<Guid> legIds)> FindConnectedLegs(string from, string to)
@@ -216,131 +395,5 @@ public class RouteService
         }
 
         return node;
-    }
-
-    private class RouteSearchState
-    {
-        public readonly Dictionary<string, LocationNode> AllNodes = new();
-        public readonly Dictionary<LocationNode, List<Path>?> StartingNodes = new();
-        public readonly Dictionary<Guid, LegEdge> AllEdges = new();
-
-        public readonly RouteSearchDirectionSpecificState Forward = new();
-        public readonly RouteSearchDirectionSpecificState Backward = new();
-
-        internal class RouteSearchDirectionSpecificState
-        {
-            public readonly HashSet<Guid> SeenLegIds = new();
-            public readonly HashSet<string> SeenNodeNames = new();
-            public readonly Dictionary<string, LocationNode> CurrentNodes = new();
-        }
-    }
-
-    private class LocationNode
-    {
-        public LocationNode(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; set; }
-        public ICollection<LegEdge> Outgoing { get; set; } = new List<LegEdge>();
-        public ICollection<LegEdge> Incoming { get; set; } = new List<LegEdge>();
-
-        public List<Path> FindOutgoingPaths(
-            string target,
-            Action<Path> relevantPathSegmentFoundCallback,
-            LocationNode? from = null,
-            Stack<LocationNode>? ignore = null)
-        {
-            from ??= this;
-            ignore ??= new Stack<LocationNode>();
-            ignore.Push(this);
-            var result = new List<Path>();
-
-            foreach (var edge in Outgoing)
-            {
-                if (ignore.Contains(edge.To))
-                {
-                    continue;
-                }
-
-                if (edge.To.Name.Contains(target, StringComparison.OrdinalIgnoreCase))
-                {
-                    var path = new Path(edge.From, edge.To, edge);
-                    relevantPathSegmentFoundCallback(path);
-                    result.Add(path);
-                }
-
-                foreach (var nextPath in edge.To.FindOutgoingPaths(target, relevantPathSegmentFoundCallback, from, ignore))
-                {
-                    var path = new Path(this, nextPath.To, edge, nextPath);
-                    relevantPathSegmentFoundCallback(path);
-                    result.Add(path);
-                }
-            }
-
-            ignore.Pop();
-
-            return result;
-        }
-    }
-
-    private class Path
-    {
-        public Path(LocationNode from, LocationNode to, LegEdge edge, Path? next = null)
-        {
-            if (to.Name != edge.To.Name)
-            {
-                if (next == null)
-                {
-                    throw new ArgumentException(
-                        $"Path leading to '{to.Name}' can't end with edge leading to '{edge.To.Name}'");
-                }
-
-                if (next.From.Name != edge.To.Name)
-                {
-                    throw new ArgumentException(
-                        $"Path's edge's target '{edge.To.Name}' doesn't match next path source '{next.From.Name}'");
-                }
-            }
-
-            From = from;
-            To = to;
-            Edge = edge;
-            Next = next;
-        }
-
-        public LocationNode From { get; }
-        public LocationNode To { get; }
-        public LegEdge Edge { get; set; }
-        public Path? Next { get; set; }
-    }
-
-    private class LegEdge
-    {
-        public LocationNode From { get; set; }
-        public LocationNode To { get; set; }
-        public Leg Leg { get; set; }
-
-        public LegEdge(Leg leg, LocationNode from, LocationNode to)
-        {
-            if (leg.StartLocation!.Name != from.Name)
-            {
-                throw new ArgumentException(
-                    $"Start node name '{from.Name}' didn't match leg start '{leg.StartLocation.Name}'", nameof(from));
-            }
-
-            if (leg.EndLocation!.Name != to.Name)
-            {
-                throw new ArgumentException(
-                    $"End node name '{to.Name}' didn't match leg start '{leg.EndLocation.Name}'", nameof(to));
-            }
-
-            Leg = leg;
-            From = from;
-            To = to;
-            from.Outgoing.Add(this);
-            to.Incoming.Add(this);
-        }
     }
 }

@@ -14,7 +14,6 @@
     <input asp-for="To" type="search" placeholder="To..."/>
     <input asp-for="Company" type="search" placeholder="Company..."/>
     @WebUtils.GetSortingFormSection(Model)
-    @WebUtils.GetPaginationFormSection(Model)
     <input type="submit" class="btn btn-primary" value="Apply filter"/>
 </form>
 
@@ -104,7 +103,7 @@
         RouteValues = Context.GetRouteValues(),
         Page = Model.Page,
         Limit = Model.Limit,
-        Total = null,
+        Total = Model.Total,
         AmountOnPage = Model.Results?.Count ?? 0,
     };
 }
