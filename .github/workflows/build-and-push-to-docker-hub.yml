@@ -1,7 +1,8 @@
 ﻿name: Build WebApp and push to DockerHub
 on:
   push:
-    branches: [ master ]
+    tags:
+      - '*'
 
 jobs:
   push_to_registry:

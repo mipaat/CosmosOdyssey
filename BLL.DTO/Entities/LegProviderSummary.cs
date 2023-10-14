@@ -1,9 +1,8 @@
-﻿using Domain.Base;
+﻿namespace BLL.DTO.Entities;
 
-namespace BLL.DTO.Entities;
-
-public class LegProviderSummary : AbstractIdDatabaseEntity
+public class LegProviderSummary
 {
+    public Guid? Id { get; set; }
     public decimal Price { get; set; }
     public DateTime Departure { get; set; }
     public DateTime Arrival { get; set; }
@@ -13,4 +12,6 @@ public class LegProviderSummary : AbstractIdDatabaseEntity
     public string EndLocation { get; set; } = default!;
     public long Distance { get; set; }
     public DateTime ValidUntil { get; set; }
+
+    public List<LegProviderSummary>? SubLegs { get; set; }
 }

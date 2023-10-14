@@ -1,4 +1,5 @@
-﻿using BLL.Services;
+﻿using BLL.DTO.Entities;
+using BLL.Services;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.ViewModels.Route;
 
@@ -15,7 +16,14 @@ public class RouteController : Controller
 
     public async Task<IActionResult> Index([FromQuery] SearchModel query)
     {
-        query.Results = await _routeService.Search(query);
+        if (!string.IsNullOrWhiteSpace(query.From) && !string.IsNullOrWhiteSpace(query.To))
+        {
+            query.Results = await _routeService.SearchRoutesFromTo(query);
+        }
+        else
+        {
+            query.Results = await _routeService.Search(query);
+        }
         return View(query);
     }
 }
