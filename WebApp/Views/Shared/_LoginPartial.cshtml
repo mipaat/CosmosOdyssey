@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Domain.Entities.Identity
+@using Microsoft.AspNetCore.Http.Extensions
 @inject SignInManager<User> SignInManager
 
 <ul class="navbar-nav">
@@ -18,13 +19,13 @@
     {
         <li class="nav-item">
             <a class="nav-link text-dark"
-               asp-controller="Account" asp-action="Register">
+               asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.GetDisplayUrl()">
                 Register
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link text-dark"
-               asp-controller="Account" asp-action="Login">
+               asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.GetDisplayUrl()">
                 Login
             </a>
         </li>

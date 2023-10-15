@@ -8,10 +8,11 @@
 
 <div class="row justify-content-around">
     <div class="col-md-4">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <form id="registerForm" method="post">
             <h2 class="text-center">Create a new local account</h2>
             <hr/>
             @Html.ValidationSummary(true, "", new { @class = "text-danger", role = "alert" })
+            @Html.HiddenFor(m => m.ReturnUrl)
             <div class="form-floating mb-3">
                 <input asp-for="Input.UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="username"/>
                 <label asp-for="Input.UserName"></label>

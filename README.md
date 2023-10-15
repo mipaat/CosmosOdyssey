@@ -35,6 +35,8 @@ The user can:
 - If logged in, view the reservations they've made in the past
 
 If both the "From" and "To" query are specified in the route view, the system will also offer combinations of flights to complete the journey.  
+It does not search very far for these connections, but should find most routes that could be of interest with the given dataset.
+
 The "From", "To", and "Company" filters are case insensitive and will match any values that contain them as a substring.
 For example, "aRT" would match "Earth".
 
