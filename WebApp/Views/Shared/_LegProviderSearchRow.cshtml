@@ -1,0 +1,75 @@
+@using WebApp.Utils
+@using Utils
+@using BLL.DTO.Entities
+@using WebApp.ViewModels.Shared
+@model WebApp.ViewModels.Shared.LegProviderSearchRowModel
+
+<tr class="@SubLegClass">
+    <td>
+        @if (Summary.IsCombination)
+        {
+            <div class="btn btn-primary collapse show @CollapseId no-animation" type="button" data-bs-toggle="collapse" data-bs-target=".@CollapseId" aria-expanded="false">
+                +
+            </div>
+            <div class="btn btn-primary collapse @CollapseId no-animation" type="button" data-bs-toggle="collapse" data-bs-target=".@CollapseId" aria-expanded="false">
+                -
+            </div>
+        }
+    </td>
+    <td>
+        @Summary.StartLocation
+    </td>
+    <td>
+        @Summary.EndLocation
+    </td>
+    <td>
+        @Summary.Departure.ToSpan(Context)
+    </td>
+    <td>
+        @Summary.Arrival.ToSpan(Context)
+    </td>
+    <td>
+        @FormattingUtils.FormatTimeSpan(Summary.Arrival - Summary.Departure)
+    </td>
+    <td>
+        @Summary.Price
+    </td>
+    <td>
+        @Summary.Distance km
+    </td>
+    <td>
+        @Summary.CompanyName
+    </td>
+    <td>
+        @if (Summary.ValidUntil < DateTime.UtcNow)
+        {
+            <span class="text-danger">Offer expired!</span>
+        }
+        else if (User.Identity?.IsAuthenticated ?? false)
+        {
+            @if (Summary.IsNotCombination)
+            {
+                <a asp-controller="Reservations" asp-action="Create" asp-route-legProviderId="@Summary.Id" class="btn btn-primary">Reserve</a>
+            }
+            else if (Summary.IsCombination)
+            {
+                <div class="text-danger">TODO multi-part reservations</div>
+            }
+        }
+    </td>
+</tr>
+@if (Summary.SubLegs != null)
+{
+    @foreach (var subSummary in Summary.SubLegs)
+    {
+        <partial name="_LegProviderSearchRow"
+                 model="new LegProviderSearchRowModel(subSummary, CollapseId, true)"/>
+    }
+}
+
+@functions
+{
+    string SubLegClass => Model.IsSubLeg ? $"collapse {CollapseId} sub-row" : string.Empty;
+    LegProviderSummary Summary => Model.Summary;
+    string CollapseId => Model.CollapseId;
+}

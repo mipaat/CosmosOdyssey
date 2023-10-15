@@ -20,3 +20,14 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.sub-row {
+  background: rgba(0, 0, 0, .10);
+  background-blend-mode: darken;
+}
+
+.collapsing.no-animation {
+  -webkit-transition: none;
+  transition: none;
+  display: none;
+}

@@ -15,4 +15,8 @@ public class LegProviderSummary
     public DateTime ValidUntil { get; set; }
 
     public List<LegProviderSummary>? SubLegs { get; set; }
+
+    public bool IsNotCombination => Id != null && (SubLegs == null || SubLegs.Count == 0);
+
+    public bool IsCombination => Id == null && SubLegs is { Count: > 0 };
 }

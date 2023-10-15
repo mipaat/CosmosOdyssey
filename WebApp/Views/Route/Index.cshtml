@@ -1,5 +1,4 @@
 ﻿@using BLL.DTO.Entities
-@using Utils
 @using WebApp.Controllers
 @using WebApp.Utils
 @using WebApp.ViewModels.Shared
@@ -22,6 +21,7 @@
 <table class="table">
     <thead>
     <tr>
+        <th></th>
         <th>
             From
         </th>
@@ -52,43 +52,12 @@
     <tbody>
     @if (Model.Results != null)
     {
+        var index = 0;
         @foreach (var summary in Model.Results)
         {
-            <tr>
-                <td>
-                    @summary.StartLocation
-                </td>
-                <td>
-                    @summary.EndLocation
-                </td>
-                <td>
-                    @summary.Departure.ToSpan(Context)
-                </td>
-                <td>
-                    @summary.Arrival.ToSpan(Context)
-                </td>
-                <td>
-                    @FormattingUtils.FormatTimeSpan(summary.Arrival - summary.Departure)
-                </td>
-                <td>
-                    @summary.Price
-                </td>
-                <td>
-                    @summary.Distance km
-                </td>
-                <td>
-                    @summary.CompanyName
-                </td>
-                <td>
-                    @if (summary.ValidUntil < DateTime.UtcNow)
-                    {
-                        <span class="text-danger">Offer expired!</span>
-                    } else if (User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <a asp-controller="Reservations" asp-action="Create" asp-route-legProviderId="@summary.Id" class="btn btn-primary">Reserve</a>
-                    }
-                </td>
-            </tr>
+            var collapseId = "leg-provider-collapse-" + index;
+            <partial name="_LegProviderSearchRow" model="new LegProviderSearchRowModel(summary, collapseId)"/>
+            index++;
         }
     }
     </tbody>
