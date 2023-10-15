@@ -17,10 +17,22 @@
     <thead>
     <tr>
         <th>
+            From
+        </th>
+        <th>
+            To
+        </th>
+        <th>
             <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.FirstName), Model.ToQueryStringValues, Model.SortBy, "First name"))"/>
         </th>
         <th>
             <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.LastName), Model.ToQueryStringValues, Model.SortBy, "Last name"))"/>
+        </th>
+        <th>
+            Departure
+        </th>
+        <th>
+            Arrival
         </th>
         <th>
             <partial name="_SortHeader" model="@(new SortHeaderModel(nameof(ReservationSummary.CreatedAt), Model.ToQueryStringValues, Model.SortBy, "Created at"))"/>
@@ -38,8 +50,12 @@
     @foreach (var reservation in Model.Reservations)
     {
         <tr>
+            <td>@reservation.LegProviders.First().StartLocation</td>
+            <td>@reservation.LegProviders.Last().EndLocation</td>
             <td>@reservation.FirstName</td>
             <td>@reservation.LastName</td>
+            <td>@reservation.LegProviders.First().Departure</td>
+            <td>@reservation.LegProviders.Last().Arrival</td>
             <td>@reservation.CreatedAt.ToSpan(Context)</td>
             <td>@reservation.TotalPrice</td>
             <td>@FormattingUtils.FormatTimeSpan(reservation.TotalTravelTime)</td>

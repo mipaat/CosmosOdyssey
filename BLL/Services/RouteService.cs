@@ -22,7 +22,11 @@ public partial class RouteService
 
     public Task<List<LegProviderSummary>> GetLegProvidersByIds(ICollection<Guid> ids)
     {
-        return _ctx.LegProviders.Where(e => ids.Contains(e.Id)).ProjectToSummary().ToListAsync();
+        return _ctx.LegProviders
+            .Where(e => ids.Contains(e.Id))
+            .OrderBy(e => e.Departure)
+            .ProjectToSummary()
+            .ToListAsync();
     }
 
     public async Task<List<LegProviderSummary>> Search(ILegProviderQuery search)

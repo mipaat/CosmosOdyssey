@@ -43,6 +43,7 @@ public class ReservationsController : Controller
         {
             return RedirectToAction("Index", "Route");
         }
+
         if (!ModelState.IsValid)
         {
             return View(await PrepareCreateGetModel(new CreateGetModel
@@ -115,7 +116,14 @@ public class ReservationsController : Controller
         {
             throw new ArgumentException($"{nameof(model.LegProviderIds)} should not be null or empty");
         }
+
         var providers = await _routeService.GetLegProvidersByIds(model.LegProviderIds);
+        if (providers.Count != model.LegProviderIds.Count)
+        {
+            throw new ApplicationException(
+                $"Provider count ({providers.Count}) didn't match provider IDs count ({model.LegProviderIds.Count})");
+        }
+
         model.LegProviders = providers;
         model.TotalTravelTime = ReservationService.GetTotalTravelTime(providers);
         model.TotalPrice = ReservationService.GetTotalPrice(providers);

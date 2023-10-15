@@ -15,7 +15,9 @@ public static class ReservationSummaryMapper
             TotalPrice = reservation.TotalPrice,
             TotalTravelTime = reservation.TotalTravelTime,
             UserId = reservation.UserId,
-            LegProviders = reservation.ReservationLegProviders!.Select(e => new LegProviderSummary
+            LegProviders = reservation.ReservationLegProviders!
+                .OrderBy(e => e.LegProvider!.Departure)
+                .Select(e => new LegProviderSummary
             {
                 Id = e.LegProvider!.Id,
                 Price = e.LegProvider!.Price,
