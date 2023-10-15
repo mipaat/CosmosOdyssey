@@ -25,7 +25,7 @@ public partial class RouteService
         return _ctx.LegProviders.Where(e => ids.Contains(e.Id)).ProjectToSummary().ToListAsync();
     }
 
-    public Task<List<LegProviderSummary>> Search(ILegProviderQuery search)
+    public async Task<List<LegProviderSummary>> Search(ILegProviderQuery search)
     {
         IQueryable<LegProvider> query = _ctx.LegProviders;
 
@@ -35,22 +35,25 @@ public partial class RouteService
         {
             var pattern = PostgresUtils.GetContainsPattern(search.From);
             query = query.Where(e =>
-                EF.Functions.ILike(e.Leg!.StartLocation!.Name, pattern));
+                EF.Functions.ILike(e.Leg!.StartLocation!.Name, pattern, PostgresUtils.DefaultEscapeChar));
         }
 
         if (!string.IsNullOrWhiteSpace(search.To))
         {
             var pattern = PostgresUtils.GetContainsPattern(search.To);
             query = query.Where(e =>
-                EF.Functions.ILike(e.Leg!.EndLocation!.Name, pattern));
+                EF.Functions.ILike(e.Leg!.EndLocation!.Name, pattern, PostgresUtils.DefaultEscapeChar));
         }
 
         if (!string.IsNullOrWhiteSpace(search.Company))
         {
             var pattern = PostgresUtils.GetContainsPattern(search.Company);
             query = query.Where(e =>
-                EF.Functions.ILike(e.Company!.Name, pattern));
+                EF.Functions.ILike(e.Company!.Name, pattern, PostgresUtils.DefaultEscapeChar));
         }
+
+        var total = await query.CountAsync();
+        search.Total = total;
 
         SortBehaviour<LegProvider> sortBehaviour =
             search.SortBy.Name switch
@@ -67,7 +70,7 @@ public partial class RouteService
 
         query = query.Paginate(search);
 
-        return query.ProjectToSummary().ToListAsync();
+        return await query.ProjectToSummary().ToListAsync();
     }
 
     public async Task<List<LegProviderSummary>> SearchRoutesFromTo(ILegProviderQuery search)
@@ -286,7 +289,7 @@ public partial class RouteService
             },
         };
 
-        const int maxDepth = 3; // Arbitrarily chosen limit
+        const int maxDepth = 2; // Arbitrarily chosen limit
 
         for (var i = 0; i < maxDepth; i++)
         {
@@ -365,6 +368,10 @@ public partial class RouteService
             var names = currentSourceNodes.Values
                 .Select(e => PostgresUtils.GetContainsPattern(e.Name))
                 .ToList(); // NB! ToList() is required here to allow EF Core to translate this query into SQL
+            // Apparently passing EscapeChar here causes the query to not be translatable into SQL.
+            // But Postgres *should* still use '\' as the escape character by default and that does seem to be true.
+            // The query worked as it should, even with %-s, \-s, and "-s in the name search and planets with names containing these characters.
+            // Still, it is a bit suspicious that the generated SQL contains "ESCAPE ''", which seems like it should override the default.
             query = backward
                 ? query.Where(e => names
                     .Any(n => EF.Functions.ILike(
