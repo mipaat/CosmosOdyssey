@@ -34,17 +34,16 @@ The user can:
 - (If the offer is expired, the reservation will not go through, of course)
 - If logged in, view the reservations they've made in the past
 
+If both the "From" and "To" query are specified in the route view, the system will also offer combinations of flights to complete the journey.  
+The "From", "To", and "Company" filters are case insensitive and will match any values that contain them as a substring.
+For example, "aRT" would match "Earth".
+
 The system fetches route offers from an API when the previous offers expire
 or (just in case) when a certain time interval has passed.  
 At regular intervals (1 hour), the system deletes expired price lists and their related information from the database,
 except for the latest 15 price lists.
 
 ## Shortcomings of the system
-
-The system only provides the simple routes given by the existing API. It does not support combining routes from multiple flights.  
-The assignment text was a bit unclear on whether this capability is expected,
-but most of it appeared to lean towards such a feature being out of scope.
-At the very least, I did not implement it in my initial solution, which was made in under 2 days.
 
 The system doesn't stop users from reserving the same flight multiple times.  
 Nor does it have any limit on reservations, because no such limit was provided by the API.  
