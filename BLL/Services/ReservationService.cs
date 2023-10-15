@@ -53,27 +53,36 @@ public class ReservationService
         };
 
         query = query.OrderBy(search.SortBy, sortBehaviour);
-        
+
         query = query.Paginate(search);
-        
+
         return query.ProjectToSummary().ToListAsync();
     }
 
-    public async Task<ReservationResult> CreateReservation(Guid legProviderId, string firstName, string lastName,
+    public async Task<ReservationResult> CreateReservation(List<Guid> legProviderIds, string firstName, string lastName,
         ClaimsPrincipal user)
     {
-        var legProvider = await _ctx.LegProviders.Where(e => e.Id == legProviderId).ProjectToSummary()
-            .SingleOrDefaultAsync();
-        if (legProvider == null)
+        if (legProviderIds.Count == 0)
+        {
+            throw new ArgumentException("At least one ID is required", nameof(legProviderIds));
+        }
+
+        var legProviders = await _ctx.LegProviders
+            .Where(e => legProviderIds.Contains(e.Id))
+            .ProjectToSummary()
+            .ToListAsync();
+        if (legProviders.Count < legProviderIds.Count)
         {
             return EReservationResultType.NotFound;
         }
 
-        if (legProvider.ValidUntil <
-            DateTime.UtcNow
-                .AddSeconds(2)) // Making the validity check a bit more strict than it needs to be, just in case
+        foreach (var legProvider in legProviders)
         {
-            return EReservationResultType.Expired;
+            if (legProvider.ValidUntil < DateTime.UtcNow
+                    .AddSeconds(2)) // Making the validity check a bit more strict than it needs to be, just in case
+            {
+                return EReservationResultType.Expired;
+            }
         }
 
         var reservation = new Reservation
@@ -81,17 +90,20 @@ public class ReservationService
             FirstName = firstName,
             LastName = lastName,
             CreatedAt = DateTime.UtcNow,
-            TotalPrice = GetTotalPrice(new[] { legProvider }),
-            TotalTravelTime = GetTotalTravelTime(new[] { legProvider }),
+            TotalPrice = GetTotalPrice(legProviders),
+            TotalTravelTime = GetTotalTravelTime(legProviders),
             UserId = user.GetUserId(),
             ReservationLegProviders = new List<ReservationLegProvider>(),
         };
 
-        reservation.ReservationLegProviders.Add(new ReservationLegProvider
+        foreach (var legProviderId in legProviderIds)
         {
-            LegProviderId = legProviderId,
-            ReservationId = reservation.Id,
-        });
+            reservation.ReservationLegProviders.Add(new ReservationLegProvider
+            {
+                LegProviderId = legProviderId,
+                ReservationId = reservation.Id,
+            });
+        }
 
         _ctx.Add(reservation);
 

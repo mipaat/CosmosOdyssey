@@ -47,14 +47,9 @@
         }
         else if (User.Identity?.IsAuthenticated ?? false)
         {
-            @if (Summary.IsNotCombination)
-            {
-                <a asp-controller="Reservations" asp-action="Create" asp-route-legProviderId="@Summary.Id" class="btn btn-primary">Reserve</a>
-            }
-            else if (Summary.IsCombination)
-            {
-                <div class="text-danger">TODO multi-part reservations</div>
-            }
+            <a asp-controller="Reservations" asp-action="Create" asp-all-route-data="ReservationRouteData" class="btn btn-primary">
+                Reserve
+            </a>
         }
     </td>
 </tr>
@@ -72,4 +67,34 @@
     string SubLegClass => Model.IsSubLeg ? $"collapse {CollapseId} sub-row" : string.Empty;
     LegProviderSummary Summary => Model.Summary;
     string CollapseId => Model.CollapseId;
+
+    const string QueryParamName = "legProviderIds";
+    IDictionary<string, string> ReservationRouteData
+    {
+        get
+        {
+            if (Summary.IsNotCombination)
+            {
+                return new Dictionary<string, string>
+                {
+                    { QueryParamName, Summary.Id!.Value.ToString() }
+                };
+            }
+            var result = new Dictionary<string, string>();
+            if (Summary.SubLegs != null)
+            {
+                var c = 0;
+                foreach (var subLeg in Summary.SubLegs)
+                {
+                    if (subLeg.Id == null)
+                    {
+                        throw new ApplicationException("Unexpected null ID");
+                    }
+                    result[$"{QueryParamName}[{c}]"] = subLeg.Id!.Value.ToString();
+                    c++;
+                }
+            }
+            return result;
+        }
+    }  
 }

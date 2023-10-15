@@ -25,32 +25,36 @@ public class ReservationsController : Controller
 
     [ActionName("Create")]
     [HttpGet]
-    public async Task<IActionResult> CreateGet(Guid legProviderId)
+    public async Task<IActionResult> CreateGet(List<Guid>? legProviderIds)
     {
-        if (legProviderId == default)
+        if (legProviderIds == null || legProviderIds.Count < 1)
         {
             return RedirectToAction("Index", "Route");
         }
 
-        return View(await PrepareCreateGetModel(new CreateGetModel { LegProviderId = legProviderId }));
+        return View(await PrepareCreateGetModel(new CreateGetModel { LegProviderIds = legProviderIds }));
     }
 
     [ActionName("Create")]
     [HttpPost]
     public async Task<IActionResult> PostReservation([FromForm] CreatePostModel model)
     {
+        if (model.LegProviderIds == null || model.LegProviderIds.Count < 1)
+        {
+            return RedirectToAction("Index", "Route");
+        }
         if (!ModelState.IsValid)
         {
             return View(await PrepareCreateGetModel(new CreateGetModel
             {
-                LegProviderId = model.LegProviderId,
+                LegProviderIds = model.LegProviderIds,
                 FirstName = model.FirstName,
                 LastName = model.LastName
             }));
         }
 
         var result =
-            await _reservationService.CreateReservation(model.LegProviderId, model.FirstName, model.LastName, User);
+            await _reservationService.CreateReservation(model.LegProviderIds, model.FirstName, model.LastName, User);
         switch (result.Type)
         {
             case EReservationResultType.NotFound:
@@ -60,7 +64,7 @@ public class ReservationsController : Controller
                     "Sorry, this reservation can't be made because it contains an expired offer!");
                 return View(await PrepareCreateGetModel(new CreateGetModel
                 {
-                    LegProviderId = model.LegProviderId,
+                    LegProviderIds = model.LegProviderIds,
                     FirstName = model.FirstName,
                     LastName = model.LastName
                 }));
@@ -107,7 +111,11 @@ public class ReservationsController : Controller
 
     private async Task<CreateGetModel> PrepareCreateGetModel(CreateGetModel model)
     {
-        var providers = await _routeService.GetLegProvidersByIds(model.LegProviderId);
+        if (model.LegProviderIds == null || model.LegProviderIds.Count < 1)
+        {
+            throw new ArgumentException($"{nameof(model.LegProviderIds)} should not be null or empty");
+        }
+        var providers = await _routeService.GetLegProvidersByIds(model.LegProviderIds);
         model.LegProviders = providers;
         model.TotalTravelTime = ReservationService.GetTotalTravelTime(providers);
         model.TotalPrice = ReservationService.GetTotalPrice(providers);

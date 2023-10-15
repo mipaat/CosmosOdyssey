@@ -5,7 +5,9 @@ namespace WebApp.ViewModels.Reservations;
 
 public class CreatePostModel
 {
-    public Guid LegProviderId { get; set; }
+    [Required]
+    [MinLength(1)]
+    public List<Guid>? LegProviderIds { get; set; } = default!;
     [Required]
     [DisplayName("First name")]
     public string FirstName { get; set; } = string.Empty;

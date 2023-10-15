@@ -20,7 +20,7 @@ public partial class RouteService
         _logger = logger;
     }
 
-    public Task<List<LegProviderSummary>> GetLegProvidersByIds(params Guid[] ids)
+    public Task<List<LegProviderSummary>> GetLegProvidersByIds(ICollection<Guid> ids)
     {
         return _ctx.LegProviders.Where(e => ids.Contains(e.Id)).ProjectToSummary().ToListAsync();
     }
