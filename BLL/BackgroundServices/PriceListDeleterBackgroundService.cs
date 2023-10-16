@@ -30,5 +30,8 @@ public class PriceListDeleterBackgroundService : BaseLockedTimedBackgroundServic
             .Where(c => !ctx.LegProviders
                 .Any(lp => lp.CompanyId == c.Id))
             .ExecuteDeleteAsync();
+        await ctx.Reservations.Where(r => !ctx.ReservationLegProviders
+                .Any(rlp => rlp.ReservationId == r.Id))
+            .ExecuteDeleteAsync();
     }
 }
